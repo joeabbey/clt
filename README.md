@@ -28,43 +28,6 @@ func main() {
 
 The general operation of the style function is to first call `clt.Styled(<Style1>, <Style2>, ...)`.  This creates a style that can then be applied to a string via the `.ApplyTo(<string>)` method.  A shortcut method `clt.SStyled("string", styles...)` can help eliminate some of the boilerplate.
 
-## Tables
-
-CLT provides an easy-to-use library for building text tables.  It provides layout algorithms for multi-column tables and the ability to style each column or individual cells using clt.Styled.
-
-Tables detect the terminal width and intelligently decide how cell contents should be wrapped to fit on screen.
-```go
-package main
-
-import "github.com/BTBurke/clt"
-
-func main() {
-
-	// Create a table with 3 columns
-	t := clt.NewTable(5)
-
-	// Add a title
-	t.Title("Hockey Standings")
-
-	// Set column headers
-	t.ColumnHeaders("Team", "Points", "W", "L", "OT")
-
-	// Add some rows
-	t.AddRow("Washington Capitals", "42", "18", "11", "6")
-	t.AddRow("NJ Devils", "31", "12", "18", "7")
-
-	// Render the table
-	t.Show()
-}
-```
-
-Produces:
-
-![console output](https://s3.amazonaws.com/btburke-github/simple-table.png)
-
-#### More examples
-See [examples/table_example.go](https://github.com/BTBurke/clt/blob/master/examples/table_example.go) for more examples.  Also, see the GoDoc for the details of the table library.
-
 ## Progress Bars
 
 CLT provides three kinds of progress indicators:
@@ -75,7 +38,7 @@ CLT provides three kinds of progress indicators:
 
 * *Loading* - Useful for when you are making a remote call and you want to give a visual indication that something is going on in the background, but you want it to disappear as soon as the call ends.  It also has a configurable delay so that the loading indicator will only appear when the call takes longer than the delay to complete.
 
-#### Example:  
+#### Example:
 
 See [examples/progress_example.go](https://github.com/BTBurke/clt/blob/master/examples/progress_example.go) for the example in the screencast below.
 
