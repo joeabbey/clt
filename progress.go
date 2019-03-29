@@ -60,7 +60,7 @@ func NewProgressSpinner(format string, args ...interface{}) *Progress {
 		Prompt:        fmt.Sprintf(format, args...),
 		DisplayLength: 30,
 		output:        os.Stdout,
-		spinsteps:     Wheel,
+		spinsteps:     Dots,
 	}
 }
 
@@ -165,14 +165,14 @@ func renderSpinner(p *Progress, c chan int) {
 		case result := <-c:
 			switch result {
 			case success:
-				fmt.Fprintf(p.output, "\x1b[?25h\r%s%s[%s]\n", p.Prompt, strings.Repeat(".", dotLen), Styled(Green).ApplyTo("OK"))
+				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Green).ApplyTo("OK"))
 			case fail:
-				fmt.Fprintf(p.output, "\x1b[?25h\r%s%s[%s]\n", p.Prompt, strings.Repeat(".", dotLen), Styled(Red).ApplyTo("FAIL"))
+				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Red).ApplyTo("FAIL"))
 			}
 			return
 		default:
-			fmt.Fprintf(p.output, "\x1b[?25l\r%s%s[%s]", p.Prompt, strings.Repeat(".", dotLen), spinLookup(i, p.spinsteps))
-			time.Sleep(time.Duration(250) * time.Millisecond)
+			fmt.Fprintf(p.output, "\x1b[?25l\r%s[%s]", p.Prompt, spinLookup(i, p.spinsteps))
+			time.Sleep(time.Duration(100) * time.Millisecond)
 		}
 	}
 }
