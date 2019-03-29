@@ -165,9 +165,9 @@ func renderSpinner(p *Progress, c chan int) {
 		case result := <-c:
 			switch result {
 			case success:
-				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Green).ApplyTo("OK"))
+				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Green).ApplyTo("✅"))
 			case fail:
-				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Red).ApplyTo("FAIL"))
+				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Red).ApplyTo("❌"))
 			}
 			return
 		default:
