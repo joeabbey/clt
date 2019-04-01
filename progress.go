@@ -60,7 +60,7 @@ func NewProgressSpinner(format string, args ...interface{}) *Progress {
 		Prompt:        fmt.Sprintf(format, args...),
 		DisplayLength: 30,
 		output:        os.Stdout,
-		spinsteps:     Spinner,
+		spinsteps:     Wheel,
 	}
 }
 
