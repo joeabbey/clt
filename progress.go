@@ -272,6 +272,8 @@ func renderBar(p *Progress, c chan float64) {
 // Update the progress bar using a number [0, 1.0] to represent
 // the percentage complete
 func (p *Progress) Update(pct float64) {
+	p.wg.Add(1)
+	defer p.wg.Done()
 	if pct >= 1.0 {
 		pct = 1.0
 	}
