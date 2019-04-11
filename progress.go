@@ -158,6 +158,8 @@ func (p *Progress) Fail() {
 // must always finally call either Success() or Fail() to terminate
 // the go routine.
 func (p *Progress) UpdatePrompt(prompt string) {
+	p.wg.Add(1)
+	defer p.wg.Done()
 	p.mtx.Lock()
 	defer p.mtx.Unlock()
 	p.Prompt = prompt
