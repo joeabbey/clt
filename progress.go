@@ -50,6 +50,7 @@ type Progress struct {
 	delay     time.Duration
 	output    io.Writer
 	wg        sync.WaitGroup
+	mtx       sync.Mutex
 }
 
 // NewProgressSpinner returns a new spinner with prompt <message>
@@ -150,12 +151,26 @@ func (p *Progress) Fail() {
 	p.wg.Wait()
 }
 
+// Start launches a Goroutine to render the progress bar or spinner
+// and returns control to the caller for further processing.  Spinner
+// will update automatically every 250ms until Success() or Fail() is
+// called.  Bars will update by calling Update(<pct_complete>).  You
+// must always finally call either Success() or Fail() to terminate
+// the go routine.
+func (p *Progress) UpdatePrompt(prompt string) {
+	p.mtx.Lock()
+	defer p.mtx.Unlock()
+	p.Prompt = prompt
+}
+
 func renderSpinner(p *Progress, c chan int) {
 	defer p.wg.Done()
 	if p.output == nil {
 		p.output = os.Stdout
 	}
+	p.mtx.Lock()
 	promptLen := len(p.Prompt)
+	p.mtx.Unlock()
 	dotLen := p.DisplayLength - promptLen
 	if dotLen < 3 {
 		dotLen = 3
@@ -165,13 +180,19 @@ func renderSpinner(p *Progress, c chan int) {
 		case result := <-c:
 			switch result {
 			case success:
+				p.mtx.Lock()
 				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Green).ApplyTo("OK"))
+				p.mtx.Unlock()
 			case fail:
+				p.mtx.Lock()
 				fmt.Fprintf(p.output, "\x1b[?25h\r%s[%s]\n", p.Prompt, Styled(Red).ApplyTo("FAIL"))
+				p.mtx.Unlock()
 			}
 			return
 		default:
+			p.mtx.Lock()
 			fmt.Fprintf(p.output, "\x1b[?25l\r%s[%s]", p.Prompt, spinLookup(i, p.spinsteps))
+			p.mtx.Unlock()
 			time.Sleep(time.Duration(100) * time.Millisecond)
 		}
 	}
@@ -198,10 +219,14 @@ func renderLoading(p *Progress, c chan int) {
 	for i := 0; ; i++ {
 		select {
 		case <-c:
+			p.mtx.Lock()
 			fmt.Fprintf(p.output, "\x1b[?25l\r%s\r\n", strings.Repeat(" ", len(p.spinsteps[0])+len(p.Prompt)+3))
+			p.mtx.Unlock()
 			return
 		default:
+			p.mtx.Lock()
 			fmt.Fprintf(p.output, "\x1b[?25l\r%s  %s", spinLookup(i, p.spinsteps), p.Prompt)
+			p.mtx.Unlock()
 			time.Sleep(time.Duration(250) * time.Millisecond)
 		}
 	}
@@ -222,15 +247,21 @@ func renderBar(p *Progress, c chan float64) {
 		spLen := p.DisplayLength - eqLen
 		switch {
 		case result == -1.0:
+			p.mtx.Lock()
 			fmt.Fprintf(p.output, "\x1b[?25l\r%s: [%s] %s", p.Prompt, strings.Repeat("=", p.DisplayLength), Styled(Green).ApplyTo("100%"))
+			p.mtx.Unlock()
 			fmt.Fprintf(p.output, "\x1b[?25h\n")
 			return
 		case result == -2.0:
+			p.mtx.Lock()
 			fmt.Fprintf(p.output, "\x1b[?25l\r%s: [%s] %s", p.Prompt, strings.Repeat("X", p.DisplayLength), Styled(Red).ApplyTo("FAIL"))
+			p.mtx.Unlock()
 			fmt.Fprintf(p.output, "\x1b[?25h\n")
 			return
 		case result >= 0.0:
+			p.mtx.Lock()
 			fmt.Fprintf(p.output, "\x1b[?25l\r%s: [%s%s] %2.0f%%", p.Prompt, strings.Repeat("=", eqLen), strings.Repeat(" ", spLen), 100.0*result)
+			p.mtx.Unlock()
 		}
 
 	}
