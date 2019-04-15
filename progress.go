@@ -122,15 +122,22 @@ func (p *Progress) Success() {
 	switch p.style {
 	case spinner:
 		p.c <- success
-		close(p.c)
 	case bar:
 		p.cf <- -1.0
-		close(p.cf)
 	case loading:
 		p.c <- success
+	}
+
+	p.wg.Wait()
+
+	switch p.style {
+	case spinner:
+		close(p.c)
+	case bar:
+		close(p.cf)
+	case loading:
 		close(p.c)
 	}
-	p.wg.Wait()
 }
 
 // Fail should be called on a progress bar or spinner
@@ -139,16 +146,23 @@ func (p *Progress) Fail() {
 	switch p.style {
 	case spinner:
 		p.c <- fail
-		close(p.c)
 	case bar:
 		p.cf <- -2.0
-		close(p.cf)
 	// loading only has one termination state
 	case loading:
 		p.c <- success
+	}
+
+	p.wg.Wait()
+
+	switch p.style {
+	case spinner:
+		close(p.c)
+	case bar:
+		close(p.cf)
+	case loading:
 		close(p.c)
 	}
-	p.wg.Wait()
 }
 
 // Start launches a Goroutine to render the progress bar or spinner
